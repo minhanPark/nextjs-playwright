@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# nextjs playwrite
 
-## Getting Started
+playwright는 e2e 테스트의 다른 옵션이다.
 
-First, run the development server:
+## 설치
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm init playwright
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+위의 명령어를 실행하면 몇가지 프롬프트를 고를 수 있게 그에 맞게 playwright를 설치해준다. 그리고 playwright.config.ts도 생성해준다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# 강의처럼 아래와 같이 입력했다.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+√ Where to put your end-to-end tests? · src/e2e
+√ Add a GitHub Actions workflow? (y/N) · false
+√ Install Playwright browsers (can be done manually via 'npx playwright install')? (Y/n) · true
+```
 
-## Learn More
+src 디렉토리를 사용했기 때문에 e2e 폴더로 만들었고, github actions를 사용하지 않았기 때문에 false로 했다.
 
-To learn more about Next.js, take a look at the following resources:
+```ts
+// playwright.config.ts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+export default defineConfig({
+  use: {
+    /* Base URL to use in actions like `await page.goto('/')`. */
+    // baseURL: 'http://127.0.0.1:3000',
+    baseURL: "http://127.0.0.1:3000",
+    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    trace: "on-first-retry",
+  },
+  /* Run your local dev server before starting the tests */
+  // webServer: {
+  //   command: 'npm run start',
+  //   url: 'http://127.0.0.1:3000',
+  //   reuseExistingServer: !process.env.CI,
+  // },
+  webServer: {
+    command: "npm run dev",
+    url: "http://127.0.0.1:3000",
+    reuseExistingServer: !process.env.CI,
+  },
+});
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+playwright.config.ts 파일을 설정해준다. baseUrl을 설정해주면 테스트 시 전체 url을 적지 않고 "/" 등으로 적을 수 있다.  
+webServe에 커맨드도 수정해서 dev 서버에 맞게 설정해준다.
 
-## Deploy on Vercel
+## 테스트 작성
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```ts
+// src/e2e/home.spec.ts
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+import { test, expect } from "@playwright/test";
+
+test("simple home page test", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByText("bulbasaur")).toBeVisible();
+});
+```
+
+위와 같이 파일을 작성하고 playwright를 실행하면 된다.
+
+```bash
+npx playwright test
+
+# npx playwright show-report
+# 위의 명령어로 html로 된 리포트를 볼 수도 있다.
+```
